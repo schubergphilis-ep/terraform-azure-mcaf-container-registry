@@ -93,6 +93,14 @@ resource "azurerm_container_registry" "this" {
       condition     = var.customer_managed_key != null && var.acr.sku == "Premium" || var.customer_managed_key == null
       error_message = "The Premium SKU is required if a customer managed key is defined."
     }
+    precondition {
+      # Private link with private endpoints is Premium-only. The module
+      # provisions a PE when public_network_access_enabled is false; gate
+      # that combination here so apply fails fast with a clear message
+      # rather than at the Azure API layer.
+      condition     = var.acr.public_network_access_enabled || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required when public_network_access_enabled = false (private endpoints require Premium)."
+    }
     # Gates the three Premium-only policy fields on the actual value rather
     # than null-ness. The optional() defaults (false / false / 7) mean the
     # attributes are never null, so the previous null-based preconditions
