@@ -189,15 +189,15 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
 resource "azurerm_container_registry_credential_set" "credential_set" {
   for_each = { for idx, cred in var.credential_sets : cred.name => cred }
-  
+
   name                  = each.value.name
   container_registry_id = azurerm_container_registry.this.id
   login_server          = each.value.login_server
-  
+
   identity {
     type         = "SystemAssigned"
   }
-  
+
   dynamic "authentication_credentials" {
     for_each = each.value.authentication_credentials != null ? [each.value.authentication_credentials] : []
     content {
@@ -205,14 +205,31 @@ resource "azurerm_container_registry_credential_set" "credential_set" {
       password_secret_id = authentication_credentials.value.password_secret_id
     }
   }
+
+  lifecycle {
+    precondition {
+      # Credential sets are only useful with cache rules (their job is auth
+      # for pull-through), and cache rules require Standard or Premium.
+      condition     = contains(["Standard", "Premium"], var.acr.sku)
+      error_message = "Credential sets require the Standard or Premium SKU."
+    }
+  }
 }
 
 resource "azurerm_container_registry_cache_rule" "this" {
   for_each = { for idx, rule in var.cache_rules : rule.name => rule }
-  
+
   name                  = each.value.name
   container_registry_id = azurerm_container_registry.this.id
   target_repo           = each.value.target_repo
   source_repo           = each.value.source_repo
   credential_set_id     = each.value.credential_set_name != null ? "${azurerm_container_registry.this.id}/credentialSets/${each.value.credential_set_name}" : null
+
+  lifecycle {
+    precondition {
+      # Per the Azure ACR SKU comparison: artifact cache rules are N/A on Basic.
+      condition     = contains(["Standard", "Premium"], var.acr.sku)
+      error_message = "Cache rules require the Standard or Premium SKU."
+    }
+  }
 }
