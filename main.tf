@@ -12,11 +12,16 @@ resource "azurerm_container_registry" "this" {
   sku                           = var.acr.sku
   admin_enabled                 = var.acr.admin_enabled
   anonymous_pull_enabled        = var.acr.anonymous_pull_enabled
-  retention_policy_in_days      = var.acr.retention_policy_in_days
-  export_policy_enabled         = var.acr.public_network_access_enabled ? true : var.acr.export_policy_enabled
+  # Premium-only fields are nulled on non-Premium SKUs so the attributes
+  # never reach the Azure API (which would reject them on Basic/Standard).
+  # Variable defaults stay non-null so Premium consumers see no behavior
+  # change. The lifecycle preconditions below catch explicit opt-in on
+  # non-Premium with a clear error before the API call is even attempted.
+  retention_policy_in_days      = var.acr.sku == "Premium" ? var.acr.retention_policy_in_days : null
+  export_policy_enabled         = var.acr.sku == "Premium" ? (var.acr.public_network_access_enabled ? true : var.acr.export_policy_enabled) : null
   network_rule_bypass_option    = var.acr.network_rule_bypass_option
   public_network_access_enabled = var.acr.public_network_access_enabled
-  quarantine_policy_enabled     = var.acr.quarantine_policy_enabled
+  quarantine_policy_enabled     = var.acr.sku == "Premium" ? var.acr.quarantine_policy_enabled : null
   trust_policy_enabled          = var.acr.enable_trust_policy
   zone_redundancy_enabled       = var.acr.zone_redundancy_enabled
 
@@ -88,16 +93,25 @@ resource "azurerm_container_registry" "this" {
       condition     = var.customer_managed_key != null && var.acr.sku == "Premium" || var.customer_managed_key == null
       error_message = "The Premium SKU is required if a customer managed key is defined."
     }
+    # Gates the three Premium-only policy fields on the actual value rather
+    # than null-ness. The optional() defaults (false / false / 7) mean the
+    # attributes are never null, so the previous null-based preconditions
+    # were unreachable and Basic/Standard SKUs always errored even when the
+    # caller hadn't opted into any Premium feature.
     precondition {
-      condition     = var.acr.quarantine_policy_enabled != null && var.acr.sku == "Premium" || var.acr.quarantine_policy_enabled == null
+      condition     = !var.acr.quarantine_policy_enabled || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if quarantine policy is enabled."
     }
     precondition {
-      condition     = var.acr.retention_policy_in_days != null && var.acr.sku == "Premium" || var.acr.retention_policy_in_days == null
-      error_message = "The Premium SKU is required if retention policy is defined."
+      # Treat `0` (the azurerm provider's "off" sentinel — see container
+      # registry resource source) and `7` (this variable's default) as "no
+      # opt-in". Any other value implies the caller is configuring retention
+      # and needs Premium.
+      condition     = contains([0, 7], var.acr.retention_policy_in_days) || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required when retention_policy_in_days is set to a non-default value (allowed on non-Premium: 0 = off, 7 = default)."
     }
     precondition {
-      condition     = var.acr.export_policy_enabled != null && var.acr.sku == "Premium" || var.acr.export_policy_enabled == null
+      condition     = !var.acr.export_policy_enabled || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if export policy is enabled."
     }
   }
