@@ -6,6 +6,13 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_container_registry" "this" {
+  #checkov:skip=CKV_AZURE_139:public_network_access_enabled is user-configurable via var.acr.public_network_access_enabled (default false)
+  #checkov:skip=CKV_AZURE_163:image vulnerability scanning is a subscription-level Defender for Cloud setting, not a property of this resource
+  #checkov:skip=CKV_AZURE_164:trust_policy_enabled is user-configurable via var.acr.enable_trust_policy and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_165:georeplications are user-configurable via var.acr.georeplications and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_166:quarantine_policy_enabled is user-configurable via var.acr.quarantine_policy_enabled and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_233:zone_redundancy_enabled is user-configurable via var.acr.zone_redundancy_enabled (default true) and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_237:dedicated data endpoints are only supported on the Premium SKU and are not exposed by this module
   name                          = var.acr.name
   location                      = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
   resource_group_name           = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
