@@ -6,22 +6,17 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_container_registry" "this" {
-  name                   = var.acr.name
-  location               = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
-  resource_group_name    = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
-  sku                    = var.acr.sku
-  admin_enabled          = var.acr.admin_enabled
-  anonymous_pull_enabled = var.acr.anonymous_pull_enabled
-  # Premium-only fields are nulled on non-Premium SKUs so the attributes
-  # never reach the Azure API (which would reject them on Basic/Standard).
-  # Variable defaults stay non-null so Premium consumers see no behavior
-  # change. The lifecycle preconditions below catch explicit opt-in on
-  # non-Premium with a clear error before the API call is even attempted.
-  retention_policy_in_days      = var.acr.sku == "Premium" ? var.acr.retention_policy_in_days : null
-  export_policy_enabled         = var.acr.sku == "Premium" ? (var.acr.public_network_access_enabled ? true : var.acr.export_policy_enabled) : null
+  name                          = var.acr.name
+  location                      = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
+  resource_group_name           = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
+  sku                           = var.acr.sku
+  admin_enabled                 = var.acr.admin_enabled
+  anonymous_pull_enabled        = var.acr.anonymous_pull_enabled
+  retention_policy_in_days      = local.retention_policy_in_days
+  export_policy_enabled         = local.export_policy_enabled
   network_rule_bypass_option    = var.acr.network_rule_bypass_option
   public_network_access_enabled = var.acr.public_network_access_enabled
-  quarantine_policy_enabled     = var.acr.sku == "Premium" ? var.acr.quarantine_policy_enabled : null
+  quarantine_policy_enabled     = local.quarantine_policy_enabled
   trust_policy_enabled          = var.acr.enable_trust_policy
   zone_redundancy_enabled       = var.acr.zone_redundancy_enabled
 
