@@ -100,6 +100,10 @@ ACR_DETAILS
     condition     = var.acr.role_assignments == null ? true : alltrue([for ra in var.acr.role_assignments : ra.role_definition_name == "AcrPush" || ra.role_definition_name == "AcrPull"])
     error_message = "All role definitions must be either 'AcrPull' or 'AcrPush'."
   }
+  validation {
+    condition     = var.acr.retention_policy_in_days >= 0 && var.acr.retention_policy_in_days <= 365
+    error_message = "retention_policy_in_days must be between 0 and 365 (inclusive)."
+  }
 }
 
 variable "customer_managed_key" {

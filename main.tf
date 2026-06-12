@@ -102,10 +102,6 @@ resource "azurerm_container_registry" "this" {
       error_message = "The Premium SKU is required if quarantine policy is enabled."
     }
     precondition {
-      condition     = (var.acr.retention_policy_in_days == 0 || var.acr.retention_policy_in_days == 7) || var.acr.sku == "Premium"
-      error_message = "The Premium SKU is required when retention_policy_in_days is set to a non-default value (allowed on non-Premium: 0 = off, 7 = default)."
-    }
-    precondition {
       condition     = var.acr.export_policy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if export policy is enabled."
     }
