@@ -100,6 +100,10 @@ ACR_DETAILS
     condition     = var.acr.role_assignments == null ? true : alltrue([for ra in var.acr.role_assignments : ra.role_definition_name == "AcrPush" || ra.role_definition_name == "AcrPull"])
     error_message = "All role definitions must be either 'AcrPull' or 'AcrPush'."
   }
+  validation {
+    condition     = var.acr.retention_policy_in_days >= 0 && var.acr.retention_policy_in_days <= 365
+    error_message = "retention_policy_in_days must be between 0 and 365 (inclusive)."
+  }
 }
 
 variable "customer_managed_key" {
@@ -132,7 +136,7 @@ variable "credential_sets" {
       password_secret_id = string
     }))
   }))
-  default = []
+  default     = []
   description = <<CREDENTIAL_SETS_DETAILS
 This variable describes the configuration for credential sets in an Azure Container Registry.
 
@@ -171,12 +175,12 @@ CREDENTIAL_SETS_DETAILS
 
 variable "cache_rules" {
   type = list(object({
-    name        = string
-    target_repo = string
-    source_repo = string
+    name                = string
+    target_repo         = string
+    source_repo         = string
     credential_set_name = optional(string)
   }))
-  default = []
+  default     = []
   description = <<CACHE_RULES_DETAILS
 This variable describes the configuration for cache rules in an Azure Container Registry.
 

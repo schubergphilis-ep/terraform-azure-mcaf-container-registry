@@ -6,17 +6,24 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_container_registry" "this" {
+  #checkov:skip=CKV_AZURE_139:public_network_access_enabled is user-configurable via var.acr.public_network_access_enabled (default false)
+  #checkov:skip=CKV_AZURE_163:image vulnerability scanning is a subscription-level Defender for Cloud setting, not a property of this resource
+  #checkov:skip=CKV_AZURE_164:trust_policy_enabled is user-configurable via var.acr.enable_trust_policy and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_165:georeplications are user-configurable via var.acr.georeplications and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_166:quarantine_policy_enabled is user-configurable via var.acr.quarantine_policy_enabled and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_233:zone_redundancy_enabled is user-configurable via var.acr.zone_redundancy_enabled (default true) and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_237:dedicated data endpoints are only supported on the Premium SKU and are not exposed by this module
   name                          = var.acr.name
   location                      = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
   resource_group_name           = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
   sku                           = var.acr.sku
   admin_enabled                 = var.acr.admin_enabled
   anonymous_pull_enabled        = var.acr.anonymous_pull_enabled
-  retention_policy_in_days      = var.acr.retention_policy_in_days
-  export_policy_enabled         = var.acr.public_network_access_enabled ? true : var.acr.export_policy_enabled
+  retention_policy_in_days      = local.retention_policy_in_days
+  export_policy_enabled         = local.export_policy_enabled
   network_rule_bypass_option    = var.acr.network_rule_bypass_option
   public_network_access_enabled = var.acr.public_network_access_enabled
-  quarantine_policy_enabled     = var.acr.quarantine_policy_enabled
+  quarantine_policy_enabled     = local.quarantine_policy_enabled
   trust_policy_enabled          = var.acr.enable_trust_policy
   zone_redundancy_enabled       = var.acr.zone_redundancy_enabled
 
@@ -77,28 +84,40 @@ resource "azurerm_container_registry" "this" {
 
   lifecycle {
     precondition {
-      condition     = var.acr.zone_redundancy_enabled && var.acr.sku == "Premium" || !var.acr.zone_redundancy_enabled
+      condition     = var.acr.zone_redundancy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if zone redundancy is enabled."
     }
     precondition {
-      condition     = var.acr.network_rule_set != null && var.acr.sku == "Premium" || var.acr.network_rule_set == null
+      condition     = var.acr.network_rule_set == null || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if a network rule set is defined."
     }
     precondition {
-      condition     = var.customer_managed_key != null && var.acr.sku == "Premium" || var.customer_managed_key == null
+      condition     = var.customer_managed_key == null || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if a customer managed key is defined."
     }
     precondition {
-      condition     = var.acr.quarantine_policy_enabled != null && var.acr.sku == "Premium" || var.acr.quarantine_policy_enabled == null
+      condition     = var.acr.public_network_access_enabled != false || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required when public_network_access_enabled = false (private endpoints require Premium)."
+    }
+    precondition {
+      condition     = var.acr.quarantine_policy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if quarantine policy is enabled."
     }
     precondition {
-      condition     = var.acr.retention_policy_in_days != null && var.acr.sku == "Premium" || var.acr.retention_policy_in_days == null
-      error_message = "The Premium SKU is required if retention policy is defined."
+      condition     = var.acr.export_policy_enabled == false || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required if export policy is enabled."
     }
     precondition {
-      condition     = var.acr.export_policy_enabled != null && var.acr.sku == "Premium" || var.acr.export_policy_enabled == null
-      error_message = "The Premium SKU is required if export policy is enabled."
+      condition     = var.acr.enable_trust_policy == false || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required if trust policy (content trust) is enabled."
+    }
+    precondition {
+      condition     = length(var.acr.georeplications) == 0 || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required if georeplications are configured."
+    }
+    precondition {
+      condition     = var.acr.anonymous_pull_enabled == false || contains(["Standard", "Premium"], var.acr.sku)
+      error_message = "The Standard or Premium SKU is required if anonymous_pull_enabled is true."
     }
   }
 }
@@ -118,15 +137,15 @@ module "private_endpoints" {
 
   count = var.acr.public_network_access_enabled == true ? 0 : 1
 
-  location                      = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
-  resource_group_name           = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
-  
+  location            = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
+  resource_group_name = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
+
   private_endpoints = {
     "${var.acr.name}-pep" = {
-      private_connection_resource_id = azurerm_container_registry.this.id
-      subnet_id = var.acr.pe_subnet
-      subresource_name = "registry"
-      is_manual_connection = false
+      private_connection_resource_id          = azurerm_container_registry.this.id
+      subnet_id                               = var.acr.pe_subnet
+      subresource_name                        = "registry"
+      is_manual_connection                    = false
       private_endpoints_manage_dns_zone_group = false
       tags = merge(
         var.tags,
@@ -175,15 +194,15 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
 resource "azurerm_container_registry_credential_set" "credential_set" {
   for_each = { for idx, cred in var.credential_sets : cred.name => cred }
-  
+
   name                  = each.value.name
   container_registry_id = azurerm_container_registry.this.id
   login_server          = each.value.login_server
-  
+
   identity {
-    type         = "SystemAssigned"
+    type = "SystemAssigned"
   }
-  
+
   dynamic "authentication_credentials" {
     for_each = each.value.authentication_credentials != null ? [each.value.authentication_credentials] : []
     content {
@@ -191,14 +210,31 @@ resource "azurerm_container_registry_credential_set" "credential_set" {
       password_secret_id = authentication_credentials.value.password_secret_id
     }
   }
+
+  lifecycle {
+    precondition {
+      # Credential sets are only useful with cache rules (their job is auth
+      # for pull-through), and cache rules require Standard or Premium.
+      condition     = contains(["Standard", "Premium"], var.acr.sku)
+      error_message = "Credential sets require the Standard or Premium SKU."
+    }
+  }
 }
 
 resource "azurerm_container_registry_cache_rule" "this" {
   for_each = { for idx, rule in var.cache_rules : rule.name => rule }
-  
+
   name                  = each.value.name
   container_registry_id = azurerm_container_registry.this.id
   target_repo           = each.value.target_repo
   source_repo           = each.value.source_repo
   credential_set_id     = each.value.credential_set_name != null ? "${azurerm_container_registry.this.id}/credentialSets/${each.value.credential_set_name}" : null
+
+  lifecycle {
+    precondition {
+      # Per the Azure ACR SKU comparison: artifact cache rules are N/A on Basic.
+      condition     = contains(["Standard", "Premium"], var.acr.sku)
+      error_message = "Cache rules require the Standard or Premium SKU."
+    }
+  }
 }
