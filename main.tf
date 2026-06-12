@@ -82,15 +82,15 @@ resource "azurerm_container_registry" "this" {
 
   lifecycle {
     precondition {
-      condition     = var.acr.zone_redundancy_enabled && var.acr.sku == "Premium" || !var.acr.zone_redundancy_enabled
+      condition     = var.acr.zone_redundancy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if zone redundancy is enabled."
     }
     precondition {
-      condition     = var.acr.network_rule_set != null && var.acr.sku == "Premium" || var.acr.network_rule_set == null
+      condition     = var.acr.network_rule_set == null || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if a network rule set is defined."
     }
     precondition {
-      condition     = var.customer_managed_key != null && var.acr.sku == "Premium" || var.customer_managed_key == null
+      condition     = var.customer_managed_key == null || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if a customer managed key is defined."
     }
     precondition {
@@ -108,6 +108,18 @@ resource "azurerm_container_registry" "this" {
     precondition {
       condition     = var.acr.export_policy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if export policy is enabled."
+    }
+    precondition {
+      condition     = var.acr.enable_trust_policy == false || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required if trust policy (content trust) is enabled."
+    }
+    precondition {
+      condition     = length(var.acr.georeplications) == 0 || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required if georeplications are configured."
+    }
+    precondition {
+      condition     = var.acr.anonymous_pull_enabled == false || contains(["Standard", "Premium"], var.acr.sku)
+      error_message = "The Standard or Premium SKU is required if anonymous_pull_enabled is true."
     }
   }
 }
