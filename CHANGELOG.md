@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/compare/v0.2.0...v0.2.1) (2026-06-12)
+
+
+### 🐛 Fixes
+
+* allow Basic/Standard SKUs through lifecycle preconditions ([#3](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/issues/3)) ([81a9415](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/commit/81a94154ae844742a3e26c8f2d0cbbb1e95b745e))
+
 ## [0.2.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/compare/v0.1.3...v0.2.0) (2025-04-29)
 
 
@@ -41,4 +48,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🚀 Features
 
 * new module release ([#1](https://github.com/schubergphilis/terraform-azure-mcaf-container-registry/pull/1)) ([59ecbf3](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/commit/59ecbf3da08850d13ab55c4ed4cb81e2a5c26f1c))
-
