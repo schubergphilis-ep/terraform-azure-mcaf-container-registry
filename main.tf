@@ -94,32 +94,19 @@ resource "azurerm_container_registry" "this" {
       error_message = "The Premium SKU is required if a customer managed key is defined."
     }
     precondition {
-      # Private link with private endpoints is Premium-only. The module
-      # provisions a PE when public_network_access_enabled is false; gate
-      # that combination here so apply fails fast with a clear message
-      # rather than at the Azure API layer.
-      condition     = var.acr.public_network_access_enabled || var.acr.sku == "Premium"
+      condition     = var.acr.public_network_access_enabled != false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required when public_network_access_enabled = false (private endpoints require Premium)."
     }
-    # Gates the three Premium-only policy fields on the actual value rather
-    # than null-ness. The optional() defaults (false / false / 7) mean the
-    # attributes are never null, so the previous null-based preconditions
-    # were unreachable and Basic/Standard SKUs always errored even when the
-    # caller hadn't opted into any Premium feature.
     precondition {
-      condition     = !var.acr.quarantine_policy_enabled || var.acr.sku == "Premium"
+      condition     = var.acr.quarantine_policy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if quarantine policy is enabled."
     }
     precondition {
-      # Treat `0` (the azurerm provider's "off" sentinel — see container
-      # registry resource source) and `7` (this variable's default) as "no
-      # opt-in". Any other value implies the caller is configuring retention
-      # and needs Premium.
-      condition     = contains([0, 7], var.acr.retention_policy_in_days) || var.acr.sku == "Premium"
+      condition     = (var.acr.retention_policy_in_days == 0 || var.acr.retention_policy_in_days == 7) || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required when retention_policy_in_days is set to a non-default value (allowed on non-Premium: 0 = off, 7 = default)."
     }
     precondition {
-      condition     = !var.acr.export_policy_enabled || var.acr.sku == "Premium"
+      condition     = var.acr.export_policy_enabled == false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if export policy is enabled."
     }
   }
