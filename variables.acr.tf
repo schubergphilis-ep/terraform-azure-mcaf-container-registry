@@ -132,7 +132,7 @@ variable "credential_sets" {
       password_secret_id = string
     }))
   }))
-  default = []
+  default     = []
   description = <<CREDENTIAL_SETS_DETAILS
 This variable describes the configuration for credential sets in an Azure Container Registry.
 
@@ -171,12 +171,12 @@ CREDENTIAL_SETS_DETAILS
 
 variable "cache_rules" {
   type = list(object({
-    name        = string
-    target_repo = string
-    source_repo = string
+    name                = string
+    target_repo         = string
+    source_repo         = string
     credential_set_name = optional(string)
   }))
-  default = []
+  default     = []
   description = <<CACHE_RULES_DETAILS
 This variable describes the configuration for cache rules in an Azure Container Registry.
 

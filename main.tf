@@ -6,12 +6,12 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_container_registry" "this" {
-  name                          = var.acr.name
-  location                      = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
-  resource_group_name           = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
-  sku                           = var.acr.sku
-  admin_enabled                 = var.acr.admin_enabled
-  anonymous_pull_enabled        = var.acr.anonymous_pull_enabled
+  name                   = var.acr.name
+  location               = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
+  resource_group_name    = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
+  sku                    = var.acr.sku
+  admin_enabled          = var.acr.admin_enabled
+  anonymous_pull_enabled = var.acr.anonymous_pull_enabled
   # Premium-only fields are nulled on non-Premium SKUs so the attributes
   # never reach the Azure API (which would reject them on Basic/Standard).
   # Variable defaults stay non-null so Premium consumers see no behavior
@@ -140,15 +140,15 @@ module "private_endpoints" {
 
   count = var.acr.public_network_access_enabled == true ? 0 : 1
 
-  location                      = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
-  resource_group_name           = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
-  
+  location            = var.acr.location == null ? azurerm_resource_group.this[0].location : var.acr.location
+  resource_group_name = var.acr.resource_group_name == null ? azurerm_resource_group.this[0].name : var.acr.resource_group_name
+
   private_endpoints = {
     "${var.acr.name}-pep" = {
-      private_connection_resource_id = azurerm_container_registry.this.id
-      subnet_id = var.acr.pe_subnet
-      subresource_name = "registry"
-      is_manual_connection = false
+      private_connection_resource_id          = azurerm_container_registry.this.id
+      subnet_id                               = var.acr.pe_subnet
+      subresource_name                        = "registry"
+      is_manual_connection                    = false
       private_endpoints_manage_dns_zone_group = false
       tags = merge(
         var.tags,
@@ -203,7 +203,7 @@ resource "azurerm_container_registry_credential_set" "credential_set" {
   login_server          = each.value.login_server
 
   identity {
-    type         = "SystemAssigned"
+    type = "SystemAssigned"
   }
 
   dynamic "authentication_credentials" {
