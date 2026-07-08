@@ -133,7 +133,8 @@ resource "azurerm_role_assignment" "acr" {
 # Private Endpoint
 
 module "private_endpoints" {
-  source = "github.com/schubergphilis/terraform-azure-mcaf-private-endpoints?ref=v0.4.1"
+  source  = "schubergphilis-ep/mcaf-private-endpoints/azure"
+  version = "0.4.1"
 
   count = var.acr.public_network_access_enabled == true ? 0 : 1
 
