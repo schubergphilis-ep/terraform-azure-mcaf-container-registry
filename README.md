@@ -19,7 +19,7 @@ Terraform module to generate Azure Container Registry
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_private_endpoints"></a> [private\_endpoints](#module\_private\_endpoints) | github.com/schubergphilis/terraform-azure-mcaf-private-endpoints | v0.4.1 |
+| <a name="module_private_endpoints"></a> [private\_endpoints](#module\_private\_endpoints) | schubergphilis-ep/mcaf-private-endpoints/azure | 0.4.1 |
 
 ## Resources
 
