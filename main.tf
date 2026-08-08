@@ -22,6 +22,7 @@ resource "azurerm_container_registry" "this" {
   retention_policy_in_days      = local.retention_policy_in_days
   export_policy_enabled         = local.export_policy_enabled
   network_rule_bypass_option    = var.acr.network_rule_bypass_option
+  data_endpoint_enabled         = var.acr.data_endpoint_enabled
   public_network_access_enabled = var.acr.public_network_access_enabled
   quarantine_policy_enabled     = local.quarantine_policy_enabled
   trust_policy_enabled          = var.acr.enable_trust_policy
@@ -98,6 +99,10 @@ resource "azurerm_container_registry" "this" {
     precondition {
       condition     = var.acr.public_network_access_enabled != false || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required when public_network_access_enabled = false (private endpoints require Premium)."
+    }
+    precondition {
+      condition     = var.acr.data_endpoint_enabled == false || var.acr.sku == "Premium"
+      error_message = "The Premium SKU is required if a dedicated data endpoint is enabled."
     }
     precondition {
       condition     = var.acr.quarantine_policy_enabled == false || var.acr.sku == "Premium"
