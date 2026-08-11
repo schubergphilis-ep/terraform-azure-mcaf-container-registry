@@ -23,6 +23,7 @@ resource "azurerm_container_registry" "this" {
   export_policy_enabled         = local.export_policy_enabled
   network_rule_bypass_option    = var.acr.network_rule_bypass_option
   data_endpoint_enabled         = var.acr.data_endpoint_enabled
+  role_assignment_mode          = var.acr.role_assignment_mode
   public_network_access_enabled = var.acr.public_network_access_enabled
   quarantine_policy_enabled     = local.quarantine_policy_enabled
   trust_policy_enabled          = var.acr.enable_trust_policy
