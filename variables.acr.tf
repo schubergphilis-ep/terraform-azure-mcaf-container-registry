@@ -8,6 +8,8 @@ variable "acr" {
     quarantine_policy_enabled     = optional(bool, false)
     admin_enabled                 = optional(bool, false)
     public_network_access_enabled = optional(bool, false)
+    data_endpoint_enabled         = optional(bool, false)
+    role_assignment_mode          = optional(string)
     enable_trust_policy           = optional(bool, false)
     export_policy_enabled         = optional(bool, false)
     retention_policy_in_days      = optional(number, 7)
@@ -51,6 +53,8 @@ This object describes the configuration for an Azure Container Registry.
 - `anonymous_pull_enabled` - (Optional) Specifies whether anonymous pull is enabled. Defaults to `false`.
 - `quarantine_policy_enabled` - (Optional) Specifies whether quarantine policy is enabled. Defaults to `false`.
 - `public_network_access_enabled` - (Optional) Specifies whether public network access is enabled. Defaults to `false`.
+- `role_assignment_mode` - (Optional) Selects how role assignments on the registry are evaluated: `AbacRepositoryPermissions` for repository-scoped permissions via ABAC conditions, or `LegacyRegistryPermissions` for registry-wide roles. Unset leaves the provider default, so an existing registry keeps whatever it has.
+- `data_endpoint_enabled` - (Optional) Specifies whether a dedicated data endpoint is enabled. Required for pulls over a private endpoint: without it clients are redirected to a regional data host that is not served privately, and the pull fails after a successful authentication. Premium only. Defaults to `false`.
 - `export_policy_enabled` - (Optional) Specifies whether export policy is enabled. Defaults to `false`.
 - `retention_policy_in_days` - (Optional) Specifies the number of days to retain untagged manifests. Defaults to `7`.
 - `network_bypass` - (Optional) Specifies the network bypass options. Possible values are `AzureServices`, `None`, and `ServiceEndpoints`.
