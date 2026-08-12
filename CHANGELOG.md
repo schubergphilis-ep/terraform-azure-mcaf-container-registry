@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/compare/v0.2.2...v0.3.0) (2026-08-12)
+
+
+### 🚀 Features
+
+* expose data_endpoint_enabled on the registry ([#7](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/issues/7)) ([8e7134b](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/commit/8e7134be64b671a05d339d0997a1445c6f1e3233))
+
 ## [0.2.2](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/compare/v0.2.1...v0.2.2) (2026-07-09)
 
 
