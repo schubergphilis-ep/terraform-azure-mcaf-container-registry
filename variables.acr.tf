@@ -26,7 +26,8 @@ variable "acr" {
         ip_range = string
       })), [])
     }), null)
-    pe_subnet = optional(string, null)
+    pe_subnet               = optional(string, null)
+    pe_private_dns_zone_ids = optional(list(string), [])
     georeplications = optional(list(object({
       location                  = string
       regional_endpoint_enabled = optional(bool, true)
@@ -70,6 +71,7 @@ This object describes the configuration for an Azure Container Registry.
 - `role_assignments` - (Optional) Specifies the role assignments for the Container Registry. The following properties can be specified:
   - `principal_id` - (Required) The ID of the principal to assign the role to.
   - `role` - (Required) The role to assign to the principal. Possible values are `AcrPull`, `AcrPush`
+- `pe_private_dns_zone_ids` - (Optional) Private DNS zone resource IDs for the registry's private endpoint. When set, the module creates the private DNS zone group (registry + data-endpoint A records); when empty (default), DNS is left to the platform (e.g. a DINE policy). Only used when `public_network_access_enabled` is false.
 - `tags` - (Optional) A mapping of tags to assign to the resource.
 
 Example Inputs:

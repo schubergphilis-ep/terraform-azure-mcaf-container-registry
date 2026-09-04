@@ -153,7 +153,8 @@ module "private_endpoints" {
       subnet_id                               = var.acr.pe_subnet
       subresource_name                        = "registry"
       is_manual_connection                    = false
-      private_endpoints_manage_dns_zone_group = false
+      private_endpoints_manage_dns_zone_group = length(var.acr.pe_private_dns_zone_ids) > 0
+      private_dns_zone_resource_ids           = var.acr.pe_private_dns_zone_ids
       tags = merge(
         var.tags,
         tomap({
