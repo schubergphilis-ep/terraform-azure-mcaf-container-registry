@@ -10,7 +10,6 @@ variable "acr" {
     public_network_access_enabled = optional(bool, false)
     data_endpoint_enabled         = optional(bool, false)
     role_assignment_mode          = optional(string)
-    enable_trust_policy           = optional(bool, false)
     export_policy_enabled         = optional(bool, false)
     retention_policy_in_days      = optional(number, 7)
     network_rule_bypass_option    = optional(string, "None")
@@ -29,10 +28,10 @@ variable "acr" {
     pe_subnet               = optional(string, null)
     pe_private_dns_zone_ids = optional(list(string), [])
     georeplications = optional(list(object({
-      location                  = string
-      regional_endpoint_enabled = optional(bool, true)
-      zone_redundancy_enabled   = optional(bool, true)
-      tags                      = optional(map(any), null)
+      location                        = string
+      global_endpoint_routing_enabled = optional(bool, false)
+      zone_redundancy_enabled         = optional(bool, true)
+      tags                            = optional(map(any), null)
     })), [])
     zone_redundancy_enabled = optional(bool, true)
     role_assignments = optional(map(object({
