@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/compare/v0.4.0...v1.0.0) (2026-10-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires the azurerm 5.x provider. The `acr.enable_trust_policy` input is removed and the georeplications `regional_endpoint_enabled` input is renamed to `global_endpoint_routing_enabled`.
+
+### 🧼 Refactoring
+
+* support azurerm provider 5.x ([#11](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/issues/11)) ([8308164](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/commit/830816418033a3901dff9da70c5e435215432fe6))
+
 ## [0.4.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-container-registry/compare/v0.3.0...v0.4.0) (2026-09-04)
 
 
