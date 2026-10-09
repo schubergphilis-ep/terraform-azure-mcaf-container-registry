@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "this" {
 resource "azurerm_container_registry" "this" {
   #checkov:skip=CKV_AZURE_139:public_network_access_enabled is user-configurable via var.acr.public_network_access_enabled (default false)
   #checkov:skip=CKV_AZURE_163:image vulnerability scanning is a subscription-level Defender for Cloud setting, not a property of this resource
-  #checkov:skip=CKV_AZURE_164:trust_policy_enabled is user-configurable via var.acr.enable_trust_policy and only supported on the Premium SKU
+  #checkov:skip=CKV_AZURE_164:content trust (trust_policy_enabled) was retired by Azure and removed in the azurerm 5.x provider, so this control is no longer configurable
   #checkov:skip=CKV_AZURE_165:georeplications are user-configurable via var.acr.georeplications and only supported on the Premium SKU
   #checkov:skip=CKV_AZURE_166:quarantine_policy_enabled is user-configurable via var.acr.quarantine_policy_enabled and only supported on the Premium SKU
   #checkov:skip=CKV_AZURE_233:zone_redundancy_enabled is user-configurable via var.acr.zone_redundancy_enabled (default true) and only supported on the Premium SKU
@@ -26,7 +26,6 @@ resource "azurerm_container_registry" "this" {
   role_assignment_mode          = var.acr.role_assignment_mode
   public_network_access_enabled = var.acr.public_network_access_enabled
   quarantine_policy_enabled     = local.quarantine_policy_enabled
-  trust_policy_enabled          = var.acr.enable_trust_policy
   zone_redundancy_enabled       = var.acr.zone_redundancy_enabled
 
   dynamic "encryption" {
@@ -42,10 +41,10 @@ resource "azurerm_container_registry" "this" {
     for_each = local.ordered_geo_replications
 
     content {
-      location                  = georeplications.value.location
-      regional_endpoint_enabled = georeplications.value.regional_endpoint_enabled
-      tags                      = georeplications.value.tags
-      zone_redundancy_enabled   = georeplications.value.zone_redundancy_enabled
+      location                        = georeplications.value.location
+      global_endpoint_routing_enabled = georeplications.value.global_endpoint_routing_enabled
+      tags                            = georeplications.value.tags
+      zone_redundancy_enabled         = georeplications.value.zone_redundancy_enabled
     }
   }
 
@@ -114,10 +113,6 @@ resource "azurerm_container_registry" "this" {
       error_message = "The Premium SKU is required if export policy is enabled."
     }
     precondition {
-      condition     = var.acr.enable_trust_policy == false || var.acr.sku == "Premium"
-      error_message = "The Premium SKU is required if trust policy (content trust) is enabled."
-    }
-    precondition {
       condition     = length(var.acr.georeplications) == 0 || var.acr.sku == "Premium"
       error_message = "The Premium SKU is required if georeplications are configured."
     }
@@ -140,7 +135,7 @@ resource "azurerm_role_assignment" "acr" {
 
 module "private_endpoints" {
   source  = "schubergphilis-ep/mcaf-private-endpoints/azure"
-  version = "0.4.1"
+  version = "2.0.0"
 
   count = var.acr.public_network_access_enabled == true ? 0 : 1
 
@@ -151,7 +146,7 @@ module "private_endpoints" {
     "${var.acr.name}-pep" = {
       private_connection_resource_id          = azurerm_container_registry.this.id
       subnet_id                               = var.acr.pe_subnet
-      subresource_name                        = "registry"
+      subresource_names                       = ["registry"]
       is_manual_connection                    = false
       private_endpoints_manage_dns_zone_group = length(var.acr.pe_private_dns_zone_ids) > 0
       private_dns_zone_resource_ids           = var.acr.pe_private_dns_zone_ids
@@ -191,11 +186,11 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
       category_group = enabled_log.value
     }
   }
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = each.value.metric_categories
 
     content {
-      category = metric.value
+      category = enabled_metric.value
     }
   }
 }

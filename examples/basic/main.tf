@@ -8,9 +8,13 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4"
+      version = ">= 5"
     }
   }
+}
+
+provider "azurerm" {
+  features {}
 }
 
 module "acr" {
@@ -23,6 +27,7 @@ module "acr" {
     admin_enabled                 = false
     public_network_access_enabled = false
     network_rule_bypass_option    = "AzureServices"
+    pe_subnet                     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.Network/virtualNetworks/myvnet/subnets/mysubnet"
 
     role_assignments = {
       acr = {
