@@ -29,7 +29,7 @@ variable "acr" {
     pe_private_dns_zone_ids = optional(list(string), [])
     georeplications = optional(list(object({
       location                        = string
-      global_endpoint_routing_enabled = optional(bool, false)
+      global_endpoint_routing_enabled = optional(bool, true)
       zone_redundancy_enabled         = optional(bool, true)
       tags                            = optional(map(any), null)
     })), [])
