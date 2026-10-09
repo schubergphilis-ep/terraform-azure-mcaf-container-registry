@@ -14,7 +14,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 5"
+      version = "~> 5.0"
     }
   }
 }
@@ -70,7 +70,7 @@ you understand any plan diff you may see:
 ## Upgrade checklist
 
 1. Bump the module version to `1.0.0`.
-2. Set the azurerm provider constraint to `~> 5` and run `terraform init -upgrade`.
+2. Set the azurerm provider constraint to `~> 5.0` and run `terraform init -upgrade`.
 3. Remove `enable_trust_policy` from the `acr` object.
 4. Rename `regional_endpoint_enabled` to `global_endpoint_routing_enabled` in all
    `georeplications` entries.
